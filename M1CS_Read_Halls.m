@@ -2,14 +2,18 @@
 %
 % Author: Chris Carter
 % Email: ccarter@tmt.org
-% Revision Date: 8th September 2022
-% Version: 1.0
+% Revision Date: 20th September 2022
+% Version: 1.1
 %
 % VERSION NOTES:
 %
 % V1.0 - Reads M1CS Actuator Hall Sensor board voltage outputs and computes
 % position displacement. Plots live curves of Hall output voltages and
 % position displacement.
+%
+% V1.1 - Acquires only the number of samples defined by the 'nsamples'
+% variable. At termination, the data, as presented in the generated
+% Figures, are automatically saved to a file.
 %
 % INSTALLATION NOTES:
 %
@@ -31,7 +35,9 @@
 % Set up the MATLAB environment
 
 clc         % Clear the command window
+
 clear all   % Clear previous environment variables and functions
+close all;  % Close previous Figures
 
 % Definitions
 
@@ -42,6 +48,7 @@ V_0 = 1.65;     % Units: Volts
 
 % Some variable declarations
 
+nsamples = 2000;    % Number of samples to record
 count = 0;
 time = [0];
 
@@ -52,7 +59,7 @@ POS_vector = [0];
 
 % Figure 1: Analogue input voltages from Hall Sensors on target board
 
-figure(1)
+f(1) = figure(1);
 p = plot (time, AIN0_vector, time, AIN1_vector);
 
 ylim([0 4]);
@@ -70,7 +77,7 @@ p(2).YDataSource = 'AIN1_vector';
 
 % Figure 2: Derived position computed from MMC recipe
 
-figure(2)
+f(2) = figure(2);
 q = plot(time, POS_vector);
 
 ylim([-25 25]);
@@ -102,7 +109,7 @@ try
 
     % Set up and call eReadName() to read the Analogue Input(s)
 
-        while(1)
+        for loop = 1:nsamples
 
         [ljmError, AIN0_val] = LabJack.LJM.eReadName(handle, 'AIN0', 0);
         [ljmError, AIN1_val] = LabJack.LJM.eReadName(handle, 'AIN1', 0);
@@ -126,11 +133,16 @@ try
 
         % Update the data on both plots
 
-        refreshdata(p)
-        refreshdata(q)
-        drawnow
+        refreshdata(p);
+        refreshdata(q);
+        drawnow;
 
         end
+
+        % Save Figures to a file for later review & circulation
+
+        savefig(f, 'Hall_sensor_figures.fig');
+
 catch e
     showErrorMessage(e)
     LabJack.LJM.CloseAll();
